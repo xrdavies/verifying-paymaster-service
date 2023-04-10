@@ -9,10 +9,17 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/ququzone/verifying-paymaster-service/config"
+	"github.com/ququzone/verifying-paymaster-service/jsonrpc"
+	"github.com/ququzone/verifying-paymaster-service/signer"
 )
 
 func main() {
 	conf := config.GetValues()
+
+	signerApi, err := signer.NewSigner()
+	if err != nil {
+		log.Fatalf("instance signer error: %v", err)
+	}
 
 	gin.SetMode(conf.GinMode)
 	r := gin.New()
@@ -26,6 +33,10 @@ func main() {
 	r.GET("/ping", func(g *gin.Context) {
 		g.String(http.StatusOK, "ok")
 	})
+	handlers := []gin.HandlerFunc{
+		jsonrpc.Process(signerApi),
+	}
+	r.POST("/", handlers...)
 
 	if err := r.Run(fmt.Sprintf(":%d", conf.Port)); err != nil {
 		log.Fatal(err)
