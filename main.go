@@ -10,21 +10,26 @@ import (
 
 	"github.com/ququzone/verifying-paymaster-service/config"
 	"github.com/ququzone/verifying-paymaster-service/jsonrpc"
+	"github.com/ququzone/verifying-paymaster-service/logger"
 	"github.com/ququzone/verifying-paymaster-service/signer"
 )
 
 func main() {
+	err := logger.InitLogger()
+	if err != nil {
+		log.Fatalf("initial logger error: %v", err)
+	}
 	conf := config.GetValues()
 
 	signerApi, err := signer.NewSigner()
 	if err != nil {
-		log.Fatalf("instance signer error: %v", err)
+		logger.S().Fatalf("instance signer error: %v", err)
 	}
 
 	gin.SetMode(conf.GinMode)
 	r := gin.New()
 	if err := r.SetTrustedProxies(nil); err != nil {
-		log.Fatal(err)
+		logger.S().Fatalf("gin set trusted proxies error: %v", err)
 	}
 	r.Use(
 		cors.Default(),
@@ -39,6 +44,6 @@ func main() {
 	r.POST("/", handlers...)
 
 	if err := r.Run(fmt.Sprintf(":%d", conf.Port)); err != nil {
-		log.Fatal(err)
+		logger.S().Fatalf("gin run error: %v", err)
 	}
 }
