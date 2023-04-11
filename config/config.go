@@ -1,11 +1,13 @@
 package config
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 )
+
+var values *Values
 
 type Values struct {
 	Keystore   string
@@ -14,7 +16,7 @@ type Values struct {
 	GinMode    string
 }
 
-func GetValues() *Values {
+func InitValues() error {
 	viper.SetDefault("port", 8888)
 	viper.SetDefault("gin_mode", gin.ReleaseMode)
 
@@ -23,7 +25,7 @@ func GetValues() *Values {
 	viper.AddConfigPath(".")
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			panic(fmt.Errorf("fatal error config file: %w", err))
+			return err
 		}
 	}
 
@@ -32,10 +34,18 @@ func GetValues() *Values {
 	_ = viper.BindEnv("KEYSTORE")
 	_ = viper.BindEnv("PASSPHARSE")
 
-	return &Values{
+	values = &Values{
 		Keystore:   viper.GetString("KEYSTORE"),
 		Passphrase: viper.GetString("PASSPHARSE"),
 		Port:       viper.GetInt("PORT"),
 		GinMode:    viper.GetString("GIN_MODE"),
 	}
+	return nil
+}
+
+func Config() *Values {
+	if values == nil {
+		log.Fatal("config not initial")
+	}
+	return values
 }

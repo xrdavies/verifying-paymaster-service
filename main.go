@@ -19,13 +19,17 @@ func main() {
 	if err != nil {
 		log.Fatalf("initial logger error: %v", err)
 	}
-	conf := config.GetValues()
+	err = config.InitValues()
+	if err != nil {
+		log.Fatalf("init config error: %v", err)
+	}
 
 	signerApi, err := signer.NewSigner()
 	if err != nil {
 		logger.S().Fatalf("instance signer error: %v", err)
 	}
 
+	conf := config.Config()
 	gin.SetMode(conf.GinMode)
 	r := gin.New()
 	if err := r.SetTrustedProxies(nil); err != nil {
