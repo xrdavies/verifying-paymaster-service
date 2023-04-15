@@ -163,7 +163,7 @@ func validateBigIntType(field reflect.Value) interface{} {
 	return field
 }
 
-func New(data map[string]any) (*UserOperation, error) {
+func NewUserOperation(data map[string]any) (*UserOperation, error) {
 	var op UserOperation
 
 	// Convert map to struct
