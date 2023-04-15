@@ -14,6 +14,7 @@ type Values struct {
 	Passphrase string
 	Port       int
 	GinMode    string
+	Contract   string
 }
 
 func InitValues() error {
@@ -39,6 +40,7 @@ func InitValues() error {
 		Passphrase: viper.GetString("PASSPHARSE"),
 		Port:       viper.GetInt("PORT"),
 		GinMode:    viper.GetString("GIN_MODE"),
+		Contract:   viper.GetString("CONTRACT"),
 	}
 	return nil
 }

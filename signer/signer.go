@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 
 	"github.com/ququzone/verifying-paymaster-service/config"
+	"github.com/ququzone/verifying-paymaster-service/logger"
 )
 
 type Signer struct {
@@ -23,6 +24,8 @@ func NewSigner() (*Signer, error) {
 	if err != nil {
 		return nil, err
 	}
+	logger.S().Infof("VerifyingPaymaster contract: %s", conf.Contract)
+	logger.S().Infof("VerifyingPaymaster signer: %s", keystore.Address.String())
 	return &Signer{
 		PrivateKey: keystore.PrivateKey,
 	}, nil
