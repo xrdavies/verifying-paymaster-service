@@ -53,7 +53,7 @@ type UserOperation struct {
 	MaxFeePerGas         *big.Int       `json:"maxFeePerGas"         mapstructure:"maxFeePerGas"         validate:"required"`
 	MaxPriorityFeePerGas *big.Int       `json:"maxPriorityFeePerGas" mapstructure:"maxPriorityFeePerGas" validate:"required"`
 	PaymasterAndData     []byte         `json:"paymasterAndData"     mapstructure:"paymasterAndData"     validate:"required"`
-	Signature            []byte         `json:"signature"            mapstructure:"signature"            validate:"required"`
+	Signature            []byte         `json:"signature"            mapstructure:"signature"`
 }
 
 func (op *UserOperation) GetFactory() common.Address {
@@ -170,7 +170,7 @@ func NewUserOperation(data map[string]any) (*UserOperation, error) {
 	config := &mapstructure.DecoderConfig{
 		DecodeHook: decodeOpTypes,
 		Result:     &op,
-		ErrorUnset: true,
+		ErrorUnset: false,
 		MatchName:  exactFieldMatch,
 	}
 	decoder, err := mapstructure.NewDecoder(config)

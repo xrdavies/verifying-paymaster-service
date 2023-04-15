@@ -72,6 +72,9 @@ func (s *Signer) Eth_signVerifyingPaymaster(op map[string]any) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	// TODO: verify op rules:
+	//  1. normal gas
+	//  2. only for create
 
 	validAfter := new(big.Int).SetInt64(time.Now().Unix())
 	validUntil := new(big.Int).Add(validAfter, validTimeDelay)

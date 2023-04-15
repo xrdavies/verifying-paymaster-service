@@ -188,7 +188,7 @@ func Process(api interface{}) gin.HandlerFunc {
 				args[i] = reflect.ValueOf(arg)
 
 			case reflect.Map:
-				val, ok := arg.(map[interface{}]interface{})
+				val, ok := arg.(map[string]any)
 				if !ok {
 					jsonrpcError(c, -32602, "Invalid params", fmt.Sprintf("Param [%d] can't be converted to %v", i, call.Type().In(i).String()), &id)
 					return
