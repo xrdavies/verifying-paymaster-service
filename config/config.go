@@ -35,6 +35,8 @@ func InitValues() error {
 	_ = viper.BindEnv("GIN_MODE")
 	_ = viper.BindEnv("KEYSTORE")
 	_ = viper.BindEnv("PASSPHARSE")
+	_ = viper.BindEnv("RPC")
+	_ = viper.BindEnv("CONTRACT")
 
 	values = &Values{
 		Keystore:   viper.GetString("KEYSTORE"),
