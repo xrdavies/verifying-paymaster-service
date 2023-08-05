@@ -31,7 +31,7 @@ type Repository interface {
 	Transaction(fc func(tx Repository) error) (err error)
 	Close() error
 	DropTableIfExists(value interface{}) error
-	AutoMigrate(value interface{}) error
+	AutoMigrate(values ...interface{}) error
 }
 
 type repository struct {
@@ -45,7 +45,7 @@ func NewRepository() Repository {
 		logger.S().Errorf("Failure database connection")
 		os.Exit(1)
 	}
-	logger.S().Infof("Success database connection, %s:%s", 1, 2)
+	logger.S().Infof("Success database connection, %s:%d", config.Config().DbHost, config.Config().DbPort)
 	return &repository{db: db}
 }
 
@@ -143,8 +143,8 @@ func (rep *repository) DropTableIfExists(value interface{}) error {
 }
 
 // AutoMigrate run auto migration for given models, will only add missing fields, won't delete/change current data
-func (rep *repository) AutoMigrate(value interface{}) error {
-	return rep.db.AutoMigrate(value)
+func (rep *repository) AutoMigrate(values ...interface{}) error {
+	return rep.db.AutoMigrate(values...)
 }
 
 // Transaction start a transaction as a block.

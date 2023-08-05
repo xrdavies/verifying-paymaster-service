@@ -9,8 +9,11 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/ququzone/verifying-paymaster-service/config"
+	"github.com/ququzone/verifying-paymaster-service/container"
+	"github.com/ququzone/verifying-paymaster-service/db"
 	"github.com/ququzone/verifying-paymaster-service/jsonrpc"
 	"github.com/ququzone/verifying-paymaster-service/logger"
+	"github.com/ququzone/verifying-paymaster-service/models"
 	"github.com/ququzone/verifying-paymaster-service/signer"
 )
 
@@ -24,7 +27,13 @@ func main() {
 		log.Fatalf("init config error: %v", err)
 	}
 
-	signerApi, err := signer.NewSigner()
+	repository := db.NewRepository()
+	err = repository.AutoMigrate(&models.User{}, &models.ApiKeys{})
+	if err != nil {
+		logger.S().Fatalf("database migrate error: %v", err)
+	}
+
+	signerApi, err := signer.NewSigner(container.NewContainer(repository))
 	if err != nil {
 		logger.S().Fatalf("instance signer error: %v", err)
 	}
@@ -45,7 +54,7 @@ func main() {
 	handlers := []gin.HandlerFunc{
 		jsonrpc.Process(signerApi),
 	}
-	r.POST("/", handlers...)
+	r.POST("/rpc/:key", handlers...)
 
 	if err := r.Run(fmt.Sprintf(":%d", conf.Port)); err != nil {
 		logger.S().Fatalf("gin run error: %v", err)

@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/ququzone/verifying-paymaster-service/config"
+	"github.com/ququzone/verifying-paymaster-service/container"
 	"github.com/ququzone/verifying-paymaster-service/contracts"
 	"github.com/ququzone/verifying-paymaster-service/logger"
 	"github.com/ququzone/verifying-paymaster-service/types"
@@ -31,12 +32,13 @@ var (
 )
 
 type Signer struct {
+	Container  container.Container
 	Contract   common.Address
 	Paymaster  *contracts.VerifyingPaymaster
 	PrivateKey *ecdsa.PrivateKey
 }
 
-func NewSigner() (*Signer, error) {
+func NewSigner(con container.Container) (*Signer, error) {
 	conf := config.Config()
 	keyData, err := os.ReadFile(conf.Keystore)
 	if err != nil {
@@ -61,6 +63,7 @@ func NewSigner() (*Signer, error) {
 	}
 
 	return &Signer{
+		Container:  con,
 		Contract:   contract,
 		Paymaster:  paymaster,
 		PrivateKey: keystore.PrivateKey,
