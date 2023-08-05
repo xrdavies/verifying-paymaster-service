@@ -4,7 +4,7 @@ Service for VerifyingPaymaster
 ## RPC
 
 ```
-curl -X POST http://localhost:8888 -H "Content-Type:application/json" --data '{
+curl -X POST http://localhost:8888/rpc/1234567890 -H "Content-Type:application/json" --data '{
     "jsonrpc":"2.0",
                 "method":"eth_signVerifyingPaymaster",
                 "params":[],

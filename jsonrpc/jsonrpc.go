@@ -12,6 +12,9 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/ququzone/verifying-paymaster-service/errors"
+	"github.com/ququzone/verifying-paymaster-service/logger"
+	"github.com/ququzone/verifying-paymaster-service/models"
+	"github.com/ququzone/verifying-paymaster-service/signer"
 )
 
 func jsonrpcError(c *gin.Context, code int, message string, data any, id *float64) {
@@ -36,6 +39,23 @@ func Process(api interface{}) gin.HandlerFunc {
 
 		if nil == c.Request.Body {
 			jsonrpcError(c, -32700, "Parse error", "No POST data", nil)
+			return
+		}
+
+		key := c.Param("key")
+		if key == "" {
+			jsonrpcError(c, -32700, "Key error", "No key", nil)
+			return
+		}
+		apiKey := &models.ApiKeys{}
+		apiKey, err := apiKey.FindByKey(api.(*signer.Signer).Container.GetRepository(), key)
+		if nil != err {
+			logger.S().Errorf("Query api error: %v", err)
+			jsonrpcError(c, -32700, "Database error", "Query apikey error", nil)
+			return
+		}
+		if apiKey == nil || !apiKey.Enable {
+			jsonrpcError(c, -32700, "Key error", "Apikey error", nil)
 			return
 		}
 
