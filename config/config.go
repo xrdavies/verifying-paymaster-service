@@ -10,6 +10,13 @@ import (
 var values *Values
 
 type Values struct {
+	// database
+	DbHost     string
+	DbPort     uint
+	DbUser     string
+	DbName     string
+	DbPassword string
+
 	Keystore   string
 	Passphrase string
 	Port       int
@@ -31,6 +38,11 @@ func InitValues() error {
 		}
 	}
 
+	_ = viper.BindEnv("DB_HOST")
+	_ = viper.BindEnv("DB_PORT")
+	_ = viper.BindEnv("DB_USER")
+	_ = viper.BindEnv("DB_NAME")
+	_ = viper.BindEnv("DB_PASSWORD")
 	_ = viper.BindEnv("PORT")
 	_ = viper.BindEnv("GIN_MODE")
 	_ = viper.BindEnv("KEYSTORE")
@@ -39,6 +51,11 @@ func InitValues() error {
 	_ = viper.BindEnv("CONTRACT")
 
 	values = &Values{
+		DbHost:     viper.GetString("DB_HOST"),
+		DbPort:     viper.GetUint("DB_PORT"),
+		DbUser:     viper.GetString("DB_USER"),
+		DbName:     viper.GetString("DB_NAME"),
+		DbPassword: viper.GetString("DB_PASSWORD"),
 		Keystore:   viper.GetString("KEYSTORE"),
 		Passphrase: viper.GetString("PASSPHARSE"),
 		Port:       viper.GetInt("PORT"),
