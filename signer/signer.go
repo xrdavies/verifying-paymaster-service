@@ -31,8 +31,21 @@ var (
 	emptySignature = make([]byte, 65)
 )
 
+type revertError struct {
+	reason string // revert reason hex encoded
+}
+
+func (e *revertError) Error() string {
+	return "execution reverted"
+}
+
+func (e *revertError) ErrorData() interface{} {
+	return e.reason
+}
+
 type Signer struct {
 	Container  container.Container
+	Client     *ethclient.Client
 	Contract   common.Address
 	Paymaster  *contracts.VerifyingPaymaster
 	PrivateKey *ecdsa.PrivateKey
@@ -64,26 +77,47 @@ func NewSigner(con container.Container) (*Signer, error) {
 
 	return &Signer{
 		Container:  con,
+		Client:     rpc,
 		Contract:   contract,
 		Paymaster:  paymaster,
 		PrivateKey: keystore.PrivateKey,
 	}, nil
 }
 
-func (s *Signer) Eth_signVerifyingPaymaster(op map[string]any) (string, error) {
+type PaymasterResult struct {
+	PaymasterAndData     string `json:"paymasterAndData"`
+	PreVerificationGas   string `json:"preVerificationGas"`
+	VerificationGasLimit string `json:"verificationGasLimit"`
+	CallGasLimit         string `json:"callGasLimit"`
+}
+
+func (s *Signer) Pm_sponsorUserOperation(op map[string]any, entryPoint string, ctx interface{}) (*PaymasterResult, error) {
 	userOp, err := types.NewUserOperation(op)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
+
+	tempOp, _ := types.NewUserOperation(op)
+	preVerificationGas, verificationGas, callGas, err := estimate(
+		s.Client,
+		s.PrivateKey,
+		s.Contract,
+		s.Paymaster,
+		common.HexToAddress(entryPoint),
+		tempOp,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	// TODO: verify op rules:
 	//  1. normal gas
 	//  2. only for create
-
 	validAfter := new(big.Int).SetInt64(time.Now().Unix())
 	validUntil := new(big.Int).Add(validAfter, validTimeDelay)
 	timeRangeData, err := timeRangeABI.Pack(validUntil, validAfter)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	userOp.PaymasterAndData = append(append(s.Contract.Bytes(), timeRangeData...), emptySignature...)
 	userOp.Signature = []byte{}
@@ -93,21 +127,27 @@ func (s *Signer) Eth_signVerifyingPaymaster(op map[string]any) (string, error) {
 		Nonce:                userOp.Nonce,
 		InitCode:             userOp.InitCode,
 		CallData:             userOp.CallData,
-		CallGasLimit:         userOp.CallGasLimit,
-		VerificationGasLimit: userOp.VerificationGasLimit,
-		PreVerificationGas:   userOp.PreVerificationGas,
+		CallGasLimit:         callGas,
+		VerificationGasLimit: verificationGas,
+		PreVerificationGas:   preVerificationGas,
 		MaxFeePerGas:         userOp.MaxFeePerGas,
 		MaxPriorityFeePerGas: userOp.MaxPriorityFeePerGas,
 		PaymasterAndData:     userOp.PaymasterAndData,
 		Signature:            userOp.Signature,
 	}, validUntil, validAfter)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	signature, err := utils.SignMessage(s.PrivateKey, hash[:])
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return hexutil.Encode(append(append(s.Contract.Bytes(), timeRangeData...), signature...)), nil
+	// TODO: set gas
+	return &PaymasterResult{
+		PaymasterAndData:     hexutil.Encode(append(append(s.Contract.Bytes(), timeRangeData...), signature...)),
+		PreVerificationGas:   hexutil.Encode(preVerificationGas.Bytes()),
+		VerificationGasLimit: hexutil.Encode(verificationGas.Bytes()),
+		CallGasLimit:         hexutil.Encode(callGas.Bytes()),
+	}, nil
 }

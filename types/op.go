@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"math/big"
 	"reflect"
@@ -192,4 +193,45 @@ func NewUserOperation(data map[string]any) (*UserOperation, error) {
 	}
 
 	return &op, nil
+}
+
+func (op *UserOperation) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Sender               string `json:"sender"`
+		Nonce                string `json:"nonce"`
+		InitCode             string `json:"initCode"`
+		CallData             string `json:"callData"`
+		CallGasLimit         string `json:"callGasLimit"`
+		VerificationGasLimit string `json:"verificationGasLimit"`
+		PreVerificationGas   string `json:"preVerificationGas"`
+		MaxFeePerGas         string `json:"maxFeePerGas"`
+		MaxPriorityFeePerGas string `json:"maxPriorityFeePerGas"`
+		PaymasterAndData     string `json:"paymasterAndData"`
+		Signature            string `json:"signature"`
+	}{
+		Sender:               op.Sender.String(),
+		Nonce:                hexutil.EncodeBig(op.Nonce),
+		InitCode:             hexutil.Encode(op.InitCode),
+		CallData:             hexutil.Encode(op.CallData),
+		CallGasLimit:         hexutil.EncodeBig(op.CallGasLimit),
+		VerificationGasLimit: hexutil.EncodeBig(op.VerificationGasLimit),
+		PreVerificationGas:   hexutil.EncodeBig(op.PreVerificationGas),
+		MaxFeePerGas:         hexutil.EncodeBig(op.MaxFeePerGas),
+		MaxPriorityFeePerGas: hexutil.EncodeBig(op.MaxPriorityFeePerGas),
+		PaymasterAndData:     hexutil.Encode(op.PaymasterAndData),
+		Signature:            hexutil.Encode(op.Signature),
+	})
+}
+
+func (op *UserOperation) ToMap() (map[string]any, error) {
+	data, err := op.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+
+	var opData map[string]any
+	if err := json.Unmarshal(data, &opData); err != nil {
+		return nil, err
+	}
+	return opData, nil
 }
