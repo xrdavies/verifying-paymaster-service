@@ -1,8 +1,9 @@
 package models
 
 import (
-	"github.com/ququzone/verifying-paymaster-service/db"
 	"gorm.io/gorm"
+
+	"github.com/ququzone/verifying-paymaster-service/db"
 )
 
 type User struct {
@@ -14,7 +15,7 @@ type ApiKeys struct {
 	gorm.Model
 	UserID      uint `json:"-"`
 	User        User
-	Key         string `gorm:"unique;type:varchar(30)"`
+	Key         string `gorm:"unique;type:varchar(32)"`
 	Enable      bool
 	Description string
 }

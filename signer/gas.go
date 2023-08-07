@@ -6,6 +6,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
+
 	"github.com/ququzone/verifying-paymaster-service/types"
 )
 
