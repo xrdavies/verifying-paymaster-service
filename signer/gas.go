@@ -51,6 +51,7 @@ func CalcPreVerificationGas(op *types.UserOperation) (*big.Int, error) {
 	// The total PVG is the sum of the batch overhead and the overhead for this userOp's validation and
 	// execution.
 	pvg := batchOv + CalcPerUserOpCost(tmp)
+	pvg = pvg * 1.1
 	static := big.NewInt(int64(math.Round(pvg)))
 
 	return static, nil
