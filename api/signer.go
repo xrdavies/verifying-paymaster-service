@@ -103,6 +103,11 @@ func (s *Signer) Pm_sponsorUserOperation(op map[string]any, entryPoint string, c
 		return nil, err
 	}
 
+	account, err := (&models.Account{}).FindByAddress(s.Container.GetRepository(), userOp.Sender.String())
+	if nil != err || account == nil {
+		return nil, errors.New("request gas first")
+	}
+
 	tempOp, _ := types.NewUserOperation(op)
 	preVerificationGas, verificationGas, callGas, err := estimate(
 		s.Client,
@@ -113,6 +118,22 @@ func (s *Signer) Pm_sponsorUserOperation(op map[string]any, entryPoint string, c
 		tempOp,
 	)
 	if err != nil {
+		return nil, err
+	}
+
+	remainGas, _ := new(big.Int).SetString(account.RemainGas, 10)
+	totalGas := new(big.Int).Add(preVerificationGas, verificationGas)
+	totalGas = new(big.Int).Add(totalGas, callGas)
+	totalGas = new(big.Int).Mul(totalGas, userOp.MaxFeePerGas)
+	if totalGas.Cmp(remainGas) > 0 {
+		return nil, errors.New("insufficient gas")
+	}
+	usedGas, _ := new(big.Int).SetString(account.UsedGas, 10)
+	account.UsedGas = new(big.Int).Add(usedGas, totalGas).String()
+	account.RemainGas = new(big.Int).Sub(remainGas, totalGas).String()
+	err = s.Container.GetRepository().Save(account).Error
+	if nil != err {
+		logger.S().Errorf("save account error: %v", err)
 		return nil, err
 	}
 
