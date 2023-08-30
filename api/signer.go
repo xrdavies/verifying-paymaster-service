@@ -2,6 +2,7 @@ package api
 
 import (
 	"crypto/ecdsa"
+	"errors"
 	"math/big"
 	"os"
 	"time"
@@ -16,6 +17,7 @@ import (
 	"github.com/ququzone/verifying-paymaster-service/container"
 	"github.com/ququzone/verifying-paymaster-service/contracts"
 	"github.com/ququzone/verifying-paymaster-service/logger"
+	"github.com/ququzone/verifying-paymaster-service/models"
 	"github.com/ququzone/verifying-paymaster-service/types"
 	"github.com/ququzone/verifying-paymaster-service/utils"
 )
@@ -49,6 +51,7 @@ type Signer struct {
 	Contract   common.Address
 	Paymaster  *contracts.VerifyingPaymaster
 	PrivateKey *ecdsa.PrivateKey
+	MaxGas     *big.Int
 }
 
 func NewSigner(con container.Container) (*Signer, error) {
@@ -75,12 +78,15 @@ func NewSigner(con container.Container) (*Signer, error) {
 		return nil, err
 	}
 
+	maxGas, _ := new(big.Int).SetString(conf.MaxGas, 10)
+
 	return &Signer{
 		Container:  con,
 		Client:     rpc,
 		Contract:   contract,
 		Paymaster:  paymaster,
 		PrivateKey: keystore.PrivateKey,
+		MaxGas:     maxGas,
 	}, nil
 }
 
@@ -152,6 +158,45 @@ func (s *Signer) Pm_sponsorUserOperation(op map[string]any, entryPoint string, c
 	}, nil
 }
 
-func (acc *Signer) Pm_gasRemain(addr string) (string, error) {
-	return "10000", nil
+func (s *Signer) Pm_gasRemain(addr string) (string, error) {
+	account, err := (&models.Account{}).FindByAddress(s.Container.GetRepository(), addr)
+	if nil != err {
+		logger.S().Errorf("Query account error: %v", err)
+		return "", err
+	}
+	if account == nil || !account.Enable {
+		return "0", nil
+	}
+	return account.RemainGas, nil
+}
+
+func (s *Signer) Pm_requestGas(addr string) (bool, error) {
+	account, err := (&models.Account{}).FindByAddress(s.Container.GetRepository(), addr)
+	if nil != err {
+		logger.S().Errorf("Query account error: %v", err)
+		return false, err
+	}
+	if account != nil {
+		if !account.Enable {
+			return false, errors.New("account disabled")
+		}
+		if account.LastRequest.Unix()+86400 > time.Now().Unix() {
+			return false, errors.New("frequent requests")
+		}
+	} else {
+		account = &models.Account{
+			Address: addr,
+			Enable:  true,
+			UsedGas: "0",
+		}
+	}
+	account.RemainGas = s.MaxGas.String()
+	account.LastRequest = time.Now()
+	err = s.Container.GetRepository().Save(account).Error
+	if nil != err {
+		logger.S().Errorf("save account error: %v", err)
+		return false, err
+	}
+
+	return true, nil
 }

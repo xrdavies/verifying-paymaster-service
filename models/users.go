@@ -26,9 +26,9 @@ func (a *ApiKeys) FindByKey(rep db.Repository, key string) (*ApiKeys, error) {
 	var rec ApiKeys
 	err := rep.Model(&ApiKeys{}).First(&rec, `"key" = ?`, key).Error
 	if err == gorm.ErrRecordNotFound {
-		err = nil
+		return nil, nil
 	}
-	return &rec, err
+	return &rec, nil
 }
 
 type Account struct {
@@ -38,4 +38,13 @@ type Account struct {
 	RemainGas   string `gorm:"type:varchar(30)"`
 	UsedGas     string `gorm:"type:varchar(30)"`
 	LastRequest time.Time
+}
+
+func (a *Account) FindByAddress(rep db.Repository, address string) (*Account, error) {
+	var rec Account
+	err := rep.Model(&Account{}).First(&rec, `"address" = ?`, address).Error
+	if err == gorm.ErrRecordNotFound {
+		return nil, nil
+	}
+	return &rec, nil
 }
