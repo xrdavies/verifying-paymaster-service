@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 
 	"github.com/ququzone/verifying-paymaster-service/db"
@@ -27,4 +29,13 @@ func (a *ApiKeys) FindByKey(rep db.Repository, key string) (*ApiKeys, error) {
 		err = nil
 	}
 	return &rec, err
+}
+
+type Account struct {
+	gorm.Model
+	Address     string `gorm:"unique;type:varchar(42)"`
+	Enable      bool
+	RemainGas   string `gorm:"type:varchar(30)"`
+	UsedGas     string `gorm:"type:varchar(30)"`
+	LastRequest time.Time
 }

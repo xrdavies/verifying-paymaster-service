@@ -11,10 +11,10 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
+	"github.com/ququzone/verifying-paymaster-service/api"
 	"github.com/ququzone/verifying-paymaster-service/errors"
 	"github.com/ququzone/verifying-paymaster-service/logger"
 	"github.com/ququzone/verifying-paymaster-service/models"
-	"github.com/ququzone/verifying-paymaster-service/signer"
 )
 
 func jsonrpcError(c *gin.Context, code int, message string, data any, id *float64) {
@@ -30,7 +30,7 @@ func jsonrpcError(c *gin.Context, code int, message string, data any, id *float6
 	})
 }
 
-func Process(api interface{}) gin.HandlerFunc {
+func Process(service interface{}) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.Method != "POST" {
 			jsonrpcError(c, -32700, "Parse error", "POST method excepted", nil)
@@ -48,7 +48,7 @@ func Process(api interface{}) gin.HandlerFunc {
 			return
 		}
 		apiKey := &models.ApiKeys{}
-		apiKey, err := apiKey.FindByKey(api.(*signer.Signer).Container.GetRepository(), key)
+		apiKey, err := apiKey.FindByKey(service.(*api.Signer).Container.GetRepository(), key)
 		if nil != err {
 			logger.S().Errorf("Query api error: %v", err)
 			jsonrpcError(c, -32700, "Database error", "Query apikey error", nil)
@@ -97,7 +97,7 @@ func Process(api interface{}) gin.HandlerFunc {
 			return
 		}
 
-		call := reflect.ValueOf(api).MethodByName(cases.Title(language.Und, cases.NoLower).String(method))
+		call := reflect.ValueOf(service).MethodByName(cases.Title(language.Und, cases.NoLower).String(method))
 		if !call.IsValid() {
 			jsonrpcError(c, -32601, "Method not found", "Method not found", &id)
 			return

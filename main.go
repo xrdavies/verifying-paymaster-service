@@ -8,13 +8,13 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
+	"github.com/ququzone/verifying-paymaster-service/api"
 	"github.com/ququzone/verifying-paymaster-service/config"
 	"github.com/ququzone/verifying-paymaster-service/container"
 	"github.com/ququzone/verifying-paymaster-service/db"
 	"github.com/ququzone/verifying-paymaster-service/jsonrpc"
 	"github.com/ququzone/verifying-paymaster-service/logger"
 	"github.com/ququzone/verifying-paymaster-service/models"
-	"github.com/ququzone/verifying-paymaster-service/signer"
 )
 
 func main() {
@@ -28,12 +28,12 @@ func main() {
 	}
 
 	repository := db.NewRepository()
-	err = repository.AutoMigrate(&models.User{}, &models.ApiKeys{})
+	err = repository.AutoMigrate(&models.User{}, &models.ApiKeys{}, &models.Account{})
 	if err != nil {
 		logger.S().Fatalf("database migrate error: %v", err)
 	}
 
-	signerApi, err := signer.NewSigner(container.NewContainer(repository))
+	signerApi, err := api.NewSigner(container.NewContainer(repository))
 	if err != nil {
 		logger.S().Fatalf("instance signer error: %v", err)
 	}

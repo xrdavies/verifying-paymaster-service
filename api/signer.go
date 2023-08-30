@@ -1,4 +1,4 @@
-package signer
+package api
 
 import (
 	"crypto/ecdsa"
@@ -150,4 +150,8 @@ func (s *Signer) Pm_sponsorUserOperation(op map[string]any, entryPoint string, c
 		VerificationGasLimit: hexutil.Encode(verificationGas.Bytes()),
 		CallGasLimit:         hexutil.Encode(callGas.Bytes()),
 	}, nil
+}
+
+func (acc *Signer) Pm_gasRemain(addr string) (string, error) {
+	return "10000", nil
 }
