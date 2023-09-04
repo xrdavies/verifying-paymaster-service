@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math/big"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -103,7 +104,7 @@ func (s *Signer) Pm_sponsorUserOperation(op map[string]any, entryPoint string, c
 		return nil, err
 	}
 
-	account, err := (&models.Account{}).FindByAddress(s.Container.GetRepository(), userOp.Sender.String())
+	account, err := (&models.Account{}).FindByAddress(s.Container.GetRepository(), strings.ToLower(userOp.Sender.String()))
 	if nil != err || account == nil {
 		return nil, errors.New("request gas first")
 	}
@@ -180,7 +181,7 @@ func (s *Signer) Pm_sponsorUserOperation(op map[string]any, entryPoint string, c
 }
 
 func (s *Signer) Pm_gasRemain(addr string) (string, error) {
-	account, err := (&models.Account{}).FindByAddress(s.Container.GetRepository(), addr)
+	account, err := (&models.Account{}).FindByAddress(s.Container.GetRepository(), strings.ToLower(addr))
 	if nil != err {
 		logger.S().Errorf("Query account error: %v", err)
 		return "", err
@@ -192,7 +193,7 @@ func (s *Signer) Pm_gasRemain(addr string) (string, error) {
 }
 
 func (s *Signer) Pm_requestGas(addr string) (bool, error) {
-	account, err := (&models.Account{}).FindByAddress(s.Container.GetRepository(), addr)
+	account, err := (&models.Account{}).FindByAddress(s.Container.GetRepository(), strings.ToLower(addr))
 	if nil != err {
 		logger.S().Errorf("Query account error: %v", err)
 		return false, err
@@ -206,7 +207,7 @@ func (s *Signer) Pm_requestGas(addr string) (bool, error) {
 		}
 	} else {
 		account = &models.Account{
-			Address: addr,
+			Address: strings.ToLower(addr),
 			Enable:  true,
 			UsedGas: "0",
 		}
