@@ -24,6 +24,7 @@ import (
 )
 
 var (
+
 	// one day
 	validTimeDelay = new(big.Int).SetInt64(86400)
 	uint48Ty, _    = abi.NewType("uint256", "uint48", []abi.ArgumentMarshaling{})

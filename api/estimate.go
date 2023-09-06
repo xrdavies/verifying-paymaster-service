@@ -241,13 +241,20 @@ func estimate(
 		return nil, nil, nil, NewRPCError(-32500, fo.Reason, fo)
 	}
 
-	est, err := client.EstimateGas(context.Background(), ethereum.CallMsg{
-		From: entryPoint,
-		To:   &op.Sender,
-		Data: op.CallData,
-	})
+	code, err := client.CodeAt(context.Background(), op.Sender, nil)
 	if err != nil {
 		return nil, nil, nil, err
+	}
+	var est uint64 = 100000
+	if len(code) > 0 {
+		est, err = client.EstimateGas(context.Background(), ethereum.CallMsg{
+			From: entryPoint,
+			To:   &op.Sender,
+			Data: op.CallData,
+		})
+		if err != nil {
+			return nil, nil, nil, err
+		}
 	}
 
 	pvg, err := CalcPreVerificationGas(op)
