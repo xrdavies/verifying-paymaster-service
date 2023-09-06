@@ -246,7 +246,7 @@ func estimate(
 		return nil, nil, nil, err
 	}
 	var est uint64 = 100000
-	if len(code) > 0 {
+	if len(code) > 0 || len(op.CallData) == 0 {
 		est, err = client.EstimateGas(context.Background(), ethereum.CallMsg{
 			From: entryPoint,
 			To:   &op.Sender,
