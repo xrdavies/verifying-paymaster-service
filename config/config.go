@@ -29,7 +29,7 @@ type Values struct {
 func InitValues() error {
 	viper.SetDefault("port", 8888)
 	viper.SetDefault("gin_mode", gin.ReleaseMode)
-	viper.SetDefault("MAX_GAS", "1000000000000000000")
+	viper.SetDefault("MAX_GAS", "10000000000000000000")
 
 	viper.SetConfigName(".env")
 	viper.SetConfigType("env")
