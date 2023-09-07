@@ -47,6 +47,12 @@ func (e *revertError) ErrorData() interface{} {
 	return e.reason
 }
 
+type GasRemain struct {
+	Remain      string `json:"remain"`
+	LastRequest int64  `json:"last_request"`
+	Used        string `json:"total_used"`
+}
+
 type Signer struct {
 	Container  container.Container
 	Client     *ethclient.Client
@@ -181,16 +187,24 @@ func (s *Signer) Pm_sponsorUserOperation(op map[string]any, entryPoint string, c
 	}, nil
 }
 
-func (s *Signer) Pm_gasRemain(addr string) (string, error) {
+func (s *Signer) Pm_gasRemain(addr string) (*GasRemain, error) {
 	account, err := (&models.Account{}).FindByAddress(s.Container.GetRepository(), strings.ToLower(addr))
 	if nil != err {
 		logger.S().Errorf("Query account error: %v", err)
-		return "", err
+		return nil, err
 	}
 	if account == nil || !account.Enable {
-		return "0", nil
+		return &GasRemain{
+			Remain:      "0",
+			Used:        "0",
+			LastRequest: 0,
+		}, nil
 	}
-	return account.RemainGas, nil
+	return &GasRemain{
+		Remain:      account.RemainGas,
+		Used:        account.UsedGas,
+		LastRequest: account.UpdatedAt.Unix(),
+	}, nil
 }
 
 func (s *Signer) Pm_requestGas(addr string) (bool, error) {
