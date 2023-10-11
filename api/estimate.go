@@ -172,6 +172,11 @@ func estimate(
 	op *types.UserOperation,
 ) (preVerificationGas *big.Int, verificationGas *big.Int, callGas *big.Int, err error) {
 	defaultGas := big.NewInt(1000000)
+
+	reqCallGasLimit := op.CallGasLimit
+	reqVerificationGasLimit := op.VerificationGasLimit
+	reqPreVerificationGas := op.PreVerificationGas
+
 	op.CallGasLimit = defaultGas
 	op.VerificationGasLimit = defaultGas
 	validAfter := new(big.Int).SetInt64(time.Now().Unix())
@@ -262,5 +267,19 @@ func estimate(
 		return nil, nil, nil, err
 	}
 
-	return pvg, sim.PreOpGas, big.NewInt(int64(est)), err
+	if reqPreVerificationGas != nil && reqPreVerificationGas.Cmp(pvg) > 0 {
+		preVerificationGas = reqPreVerificationGas
+	} else {
+		preVerificationGas = pvg
+	}
+	if reqVerificationGasLimit != nil && reqVerificationGasLimit.Cmp(sim.PreOpGas) > 0 {
+		verificationGas = reqVerificationGasLimit
+	} else {
+		verificationGas = sim.PreOpGas
+	}
+	callGas = big.NewInt(int64(est))
+	if reqCallGasLimit != nil && reqCallGasLimit.Cmp(callGas) > 0 {
+		callGas = reqCallGasLimit
+	}
+	return
 }
